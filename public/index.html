@@ -640,10 +640,60 @@
       if (isEmpty) {
         contentEl.className = 'quiz-content empty';
         contentEl.innerHTML = `<span>${text}</span>`;
-      } else {
-        contentEl.className = 'quiz-content';
-        contentEl.textContent = text;
+        return;
       }
+
+      // Try to parse quiz content as JSON
+      let questions;
+      try {
+        questions = JSON.parse(text);
+      } catch (e) {
+        contentEl.className = 'quiz-content';
+        contentEl.innerHTML = `<pre style="white-space: pre-wrap;">${text}</pre>`;
+        return;
+      }
+
+      contentEl.className = 'quiz-content';
+      contentEl.innerHTML = '';
+
+      questions.forEach((q, i) => {
+        const container = document.createElement('div');
+        container.style.marginBottom = '1.5rem';
+
+        const question = document.createElement('p');
+        question.style.fontWeight = '600';
+        question.style.marginBottom = '0.5rem';
+        question.textContent = `${i + 1}. ${q.question}`;
+        container.appendChild(question);
+
+        q.choices.forEach((choice) => {
+          const btn = document.createElement('button');
+          btn.textContent = choice;
+          btn.style.display = 'block';
+          btn.style.margin = '0.25rem 0';
+          btn.style.padding = '0.5rem 1rem';
+          btn.style.borderRadius = '0.5rem';
+          btn.style.background = 'var(--surface)';
+          btn.style.border = '1px solid var(--border)';
+          btn.style.color = 'var(--text-primary)';
+          btn.style.cursor = 'pointer';
+          btn.onmouseover = () => (btn.style.background = 'var(--primary-dark)');
+          btn.onmouseout = () => (btn.style.background = 'var(--surface)');
+          btn.onclick = () => {
+            container.querySelectorAll('button').forEach(b => {
+              b.disabled = true;
+              if (b.textContent === q.answer) {
+                b.style.background = 'var(--success)';
+              } else {
+                b.style.background = 'var(--error)';
+              }
+            });
+          };
+          container.appendChild(btn);
+        });
+
+        contentEl.appendChild(container);
+      });
     }
 
     // File Upload Handling
@@ -687,7 +737,7 @@
       if (!file) return;
 
       const originalText = setButtonLoading(generateBtn, generateBtnText, "Generating Podcast...");
-      showStatus("Uploading and generating podcast... This may take a few minutes.", "loading");
+      showStatus();
       progressBar.classList.add('show');
       audioPlayer.classList.remove('show');
 
@@ -703,34 +753,34 @@
       formData.append("pdf", file);
 
       try {
-        const response = await fetch("http://localhost:3000/upload", {
+        // Step 1: Upload the PDF
+        const uploadRes = await fetch("http://localhost:3000/upload", {
           method: "POST",
           body: formData
         });
+        if (!uploadRes.ok) throw new Error("PDF upload failed");
+
+        // Step 2: Generate podcast after upload
+        const podcastRes = await fetch("http://localhost:3000/generate-podcast", {
+          method: "POST"
+        });
+        if (!podcastRes.ok) throw new Error("Podcast generation failed");
 
         clearInterval(progressInterval);
         progressFill.style.width = '100%';
 
-        if (!response.ok) {
-          const error = await response.text();
-          throw new Error(error);
-        }
+        const { audio } = await podcastRes.json();
 
-        const { audio } = await response.json();
-
-        const audioBlob = new Blob([Uint8Array.from(atob(audio), c => c.charCodeAt(0))], { type: "audio/mpeg" });
-        const audioUrl = URL.createObjectURL(audioBlob);
-
+        const audioUrl = "data:audio/mp3;base64," + audio;
         audioElement.src = audioUrl;
         audioElement.load();
         audioPlayer.classList.add('show');
 
         showStatus("🎙️ Podcast generated successfully! Your audio is ready to play.", "success");
-        
+
         setTimeout(() => {
           progressBar.classList.remove('show');
         }, 1000);
-
       } catch (err) {
         console.error(err);
         showStatus(`Failed to generate podcast: ${err.message}`, "error");
@@ -755,8 +805,7 @@
         }
         
         const data = await response.json();
-        updateContent(quizBox, data.quiz || "No quiz generated.", false);
-      } catch (err) {
+updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
         console.error(err);
         updateContent(quizBox, "Error generating quiz. Please try again.", true);
       } finally {
