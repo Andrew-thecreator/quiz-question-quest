@@ -11,9 +11,32 @@ const { OpenAI } = require('openai');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const app = express();
-const upload = multer({ dest: 'uploads/' });
 
-app.use(cors());
+const allowedOrigins = ["https://quizcast.online", "https://quiz-question-quest.vercel.app"];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
+}));
+
+app.use((req, res, next) => {
+  const origin = req.get("origin");
+  const referer = req.get("referer");
+  const allowed = "https://quizcast.online";
+
+  if ((origin && origin !== allowed) || (referer && !referer.startsWith(allowed))) {
+    return res.status(403).json({ error: "Forbidden: Invalid origin" });
+  }
+
+  next();
+});
+
 app.use(express.json());
 
 app.post('/upload', upload.single('pdf'), async (req, res) => {
