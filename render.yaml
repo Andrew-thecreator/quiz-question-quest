@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: quiz-question-quest
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.cjs
