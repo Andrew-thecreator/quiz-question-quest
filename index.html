@@ -1,24 +1,817 @@
+
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>quiz-question-quest</title>
-    <meta name="description" content="Lovable Generated Project" />
-    <meta name="author" content="Lovable" />
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Podcast Generator - Transform PDFs into Engaging Audio</title>
+  <meta name="description" content="Convert your PDFs into engaging podcasts with AI-powered narration, quiz generation, and interactive Q&A." />
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --secondary: #ec4899;
+      --accent: #06b6d4;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --background: #0f0f23;
+      --surface: #1a1a35;
+      --surface-light: #252547;
+      --text-primary: #ffffff;
+      --text-secondary: #a8a8b3;
+      --text-muted: #6b6b80;
+      --border: #2d2d52;
+      --gradient-1: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      --gradient-2: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
+      --gradient-3: linear-gradient(135deg, var(--secondary) 0%, var(--warning) 100%);
+      --shadow: rgba(99, 102, 241, 0.1);
+      --shadow-lg: rgba(99, 102, 241, 0.2);
+    }
 
-    <meta property="og:title" content="quiz-question-quest" />
-    <meta property="og:description" content="Lovable Generated Project" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-  </head>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--background);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+    /* Background Pattern */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 60%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
+      z-index: -1;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 4rem 2rem 2rem;
+      position: relative;
+    }
+
+    .header h1 {
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 700;
+      background: var(--gradient-1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .header p {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 40px var(--shadow);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--gradient-1);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 30px 60px var(--shadow-lg);
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-icon {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 1rem;
+      background: var(--gradient-1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+      font-size: 1.25rem;
+    }
+
+    .card-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Upload Section */
+    .upload-section {
+      margin-bottom: 3rem;
+    }
+
+    .file-upload {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 2rem;
+      border: 2px dashed var(--border);
+      border-radius: 1rem;
+      background: rgba(99, 102, 241, 0.05);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .file-upload:hover {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .file-upload.drag-over {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.15);
+      transform: scale(1.02);
+    }
+
+    .upload-icon {
+      font-size: 3rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    .upload-text {
+      font-size: 1.125rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .upload-hint {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    #pdfInput {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.875rem 2rem;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      font-size: 1rem;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--gradient-1);
+      color: white;
+      box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--surface-light);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--surface);
+      border-color: var(--primary);
+    }
+
+    .btn i {
+      margin-right: 0.5rem;
+    }
+
+    /* Loading Animation */
+    .loading {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Status */
+    .status {
+      padding: 1rem;
+      border-radius: 0.75rem;
+      margin: 1rem 0;
+      font-weight: 500;
+      display: none;
+    }
+
+    .status.show {
+      display: block;
+    }
+
+    .status.success {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--success);
+    }
+
+    .status.error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: var(--error);
+    }
+
+    .status.loading {
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: var(--primary);
+    }
+
+    /* Audio Player */
+    .audio-player {
+      background: var(--surface-light);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+      display: none;
+    }
+
+    .audio-player.show {
+      display: block;
+      animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .audio-player audio {
+      width: 100%;
+      height: 60px;
+      border-radius: 0.5rem;
+    }
+
+    /* Grid Layout */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    /* Quiz Section */
+    .quiz-content, .qa-content {
+      background: var(--surface-light);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin-top: 1rem;
+      min-height: 120px;
+      border: 1px solid var(--border);
+    }
+
+    .quiz-content.empty, .qa-content.empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* Q&A Section */
+    .qa-input {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .qa-input input {
+      flex: 1;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      background: var(--surface-light);
+      color: var(--text-primary);
+      font-size: 1rem;
+    }
+
+    .qa-input input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .qa-input input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* File Info */
+    .file-info {
+      background: var(--surface-light);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .file-info.show {
+      display: flex;
+      align-items: center;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .file-info i {
+      color: var(--success);
+      margin-right: 0.75rem;
+      font-size: 1.25rem;
+    }
+
+    .file-details h4 {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .file-details p {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 0 1rem;
+      }
+      
+      .card {
+        padding: 1.5rem;
+      }
+      
+      .grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+      
+      .qa-input {
+        flex-direction: column;
+      }
+      
+      .header {
+        padding: 2rem 1rem 1rem;
+      }
+    }
+
+    /* Animations */
+    .fade-in {
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Progress Bar */
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(99, 102, 241, 0.2);
+      border-radius: 2px;
+      overflow: hidden;
+      margin: 1rem 0;
+      display: none;
+    }
+
+    .progress-bar.show {
+      display: block;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--gradient-1);
+      width: 0%;
+      transition: width 0.3s ease;
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -1000px 0; }
+      100% { background-position: 1000px 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1><i class="fas fa-podcast"></i> AI Podcast Generator</h1>
+    <p>Transform your PDFs into engaging audio content with AI-powered narration, interactive quizzes, and Q&A</p>
+  </div>
+
+  <div class="container">
+    <!-- Upload Section -->
+    <div class="card upload-section fade-in">
+      <div class="card-header">
+        <div class="card-icon">
+          <i class="fas fa-cloud-upload-alt"></i>
+        </div>
+        <h2 class="card-title">Upload Your PDF</h2>
+      </div>
+      
+      <form id="uploadForm">
+        <div class="file-upload" id="fileUpload">
+          <i class="fas fa-file-pdf upload-icon"></i>
+          <div class="upload-text">Drop your PDF here or click to browse</div>
+          <div class="upload-hint">Supports PDF files up to 50MB</div>
+          <input type="file" id="pdfInput" accept="application/pdf" required>
+        </div>
+        
+        <div class="file-info" id="fileInfo">
+          <i class="fas fa-check-circle"></i>
+          <div class="file-details">
+            <h4 id="fileName"></h4>
+            <p id="fileSize"></p>
+          </div>
+        </div>
+        
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" id="generateBtn" style="margin-top: 1.5rem; width: 100%;">
+          <i class="fas fa-magic"></i>
+          <span id="generateBtnText">Generate Podcast</span>
+        </button>
+      </form>
+      
+      <div class="status" id="status"></div>
+      
+      <div class="audio-player" id="audioPlayer">
+        <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+          <i class="fas fa-headphones" style="color: var(--success); margin-right: 0.75rem; font-size: 1.25rem;"></i>
+          <h3 style="color: var(--success); margin: 0;">Your Podcast is Ready!</h3>
+        </div>
+        <audio id="audioElement" controls preload="metadata">
+          Your browser does not support the audio element.
+        </audio>
+      </div>
+    </div>
+
+    <!-- Features Grid -->
+    <div class="grid">
+      <!-- Quiz Section -->
+      <div class="card fade-in">
+        <div class="card-header">
+          <div class="card-icon">
+            <i class="fas fa-question-circle"></i>
+          </div>
+          <h2 class="card-title">Quiz Generator</h2>
+        </div>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+          Generate interactive quiz questions based on your PDF content to test comprehension.
+        </p>
+        <button class="btn btn-secondary" id="quizBtn" style="width: 100%;">
+          <i class="fas fa-brain"></i>
+          <span id="quizBtnText">Generate Quiz Questions</span>
+        </button>
+        <div class="quiz-content empty" id="quizBox">
+          <span>Quiz questions will appear here...</span>
+        </div>
+      </div>
+
+      <!-- Q&A Section -->
+      <div class="card fade-in">
+        <div class="card-header">
+          <div class="card-icon">
+            <i class="fas fa-comments"></i>
+          </div>
+          <h2 class="card-title">Ask Questions</h2>
+        </div>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+          Ask specific questions about your PDF content and get AI-powered answers.
+        </p>
+        <div class="qa-input">
+          <input type="text" id="questionInput" placeholder="What would you like to know about this document?">
+          <button class="btn btn-primary" id="askBtn">
+            <i class="fas fa-paper-plane"></i>
+            <span id="askBtnText">Ask</span>
+          </button>
+        </div>
+        <div class="qa-content empty" id="answerBox">
+          <span>Answers will appear here...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const form = document.getElementById("uploadForm");
+    const fileUpload = document.getElementById("fileUpload");
+    const pdfInput = document.getElementById("pdfInput");
+    const fileInfo = document.getElementById("fileInfo");
+    const fileName = document.getElementById("fileName");
+    const fileSize = document.getElementById("fileSize");
+    const progressBar = document.getElementById("progressBar");
+    const progressFill = document.getElementById("progressFill");
+    const generateBtn = document.getElementById("generateBtn");
+    const generateBtnText = document.getElementById("generateBtnText");
+    const status = document.getElementById("status");
+    const audioPlayer = document.getElementById("audioPlayer");
+    const audioElement = document.getElementById("audioElement");
+
+    const quizBtn = document.getElementById("quizBtn");
+    const quizBtnText = document.getElementById("quizBtnText");
+    const quizBox = document.getElementById("quizBox");
+
+    const askBtn = document.getElementById("askBtn");
+    const askBtnText = document.getElementById("askBtnText");
+    const questionInput = document.getElementById("questionInput");
+    const answerBox = document.getElementById("answerBox");
+
+    // Utility Functions
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function showStatus(message, type = 'loading') {
+      status.textContent = message;
+      status.className = `status show ${type}`;
+    }
+
+    function hideStatus() {
+      status.className = 'status';
+    }
+
+    function setButtonLoading(btn, textEl, loadingText) {
+      btn.disabled = true;
+      const originalText = textEl.textContent;
+      textEl.innerHTML = `<span class="loading"></span> ${loadingText}`;
+      return originalText;
+    }
+
+    function resetButton(btn, textEl, originalText) {
+      btn.disabled = false;
+      textEl.textContent = originalText;
+    }
+
+    function updateContent(contentEl, text, isEmpty = false) {
+      if (isEmpty) {
+        contentEl.className = 'quiz-content empty';
+        contentEl.innerHTML = `<span>${text}</span>`;
+      } else {
+        contentEl.className = 'quiz-content';
+        contentEl.textContent = text;
+      }
+    }
+
+    // File Upload Handling
+    pdfInput.addEventListener('change', handleFileSelect);
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        fileInfo.classList.add('show');
+      }
+    }
+
+    // Drag and Drop
+    fileUpload.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      fileUpload.classList.add('drag-over');
+    });
+
+    fileUpload.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      fileUpload.classList.remove('drag-over');
+    });
+
+    fileUpload.addEventListener('drop', (e) => {
+      e.preventDefault();
+      fileUpload.classList.remove('drag-over');
+      
+      const files = e.dataTransfer.files;
+      if (files.length > 0 && files[0].type === 'application/pdf') {
+        pdfInput.files = files;
+        handleFileSelect({ target: { files } });
+      }
+    });
+
+    // Form Submission
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const file = pdfInput.files[0];
+      if (!file) return;
+
+      const originalText = setButtonLoading(generateBtn, generateBtnText, "Generating Podcast...");
+      showStatus("Uploading and generating podcast... This may take a few minutes.", "loading");
+      progressBar.classList.add('show');
+      audioPlayer.classList.remove('show');
+
+      // Simulate progress
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 90) progress = 90;
+        progressFill.style.width = progress + '%';
+      }, 500);
+
+      const formData = new FormData();
+      formData.append("pdf", file);
+
+      try {
+        const response = await fetch("http://localhost:3000/upload", {
+          method: "POST",
+          body: formData
+        });
+
+        clearInterval(progressInterval);
+        progressFill.style.width = '100%';
+
+        if (!response.ok) {
+          const error = await response.text();
+          throw new Error(error);
+        }
+
+        const { audio } = await response.json();
+
+        const audioBlob = new Blob([Uint8Array.from(atob(audio), c => c.charCodeAt(0))], { type: "audio/mpeg" });
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        audioElement.src = audioUrl;
+        audioElement.load();
+        audioPlayer.classList.add('show');
+
+        showStatus("🎙️ Podcast generated successfully! Your audio is ready to play.", "success");
+        
+        setTimeout(() => {
+          progressBar.classList.remove('show');
+        }, 1000);
+
+      } catch (err) {
+        console.error(err);
+        showStatus(`Failed to generate podcast: ${err.message}`, "error");
+        progressBar.classList.remove('show');
+      } finally {
+        resetButton(generateBtn, generateBtnText, originalText);
+      }
+    });
+
+    // Quiz Generation
+    quizBtn.addEventListener("click", async () => {
+      const originalText = setButtonLoading(quizBtn, quizBtnText, "Generating Quiz...");
+      updateContent(quizBox, "Generating quiz questions...", true);
+      
+      try {
+        const response = await fetch("http://localhost:3000/quiz", {
+          method: "POST"
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to generate quiz');
+        }
+        
+        const data = await response.json();
+        updateContent(quizBox, data.quiz || "No quiz generated.", false);
+      } catch (err) {
+        console.error(err);
+        updateContent(quizBox, "Error generating quiz. Please try again.", true);
+      } finally {
+        resetButton(quizBtn, quizBtnText, originalText);
+      }
+    });
+
+    // Q&A Functionality
+    askBtn.addEventListener("click", handleQuestion);
+    questionInput.addEventListener("keypress", (e) => {
+      if (e.key === 'Enter') {
+        handleQuestion();
+      }
+    });
+
+    async function handleQuestion() {
+      const question = questionInput.value.trim();
+      if (!question) return;
+
+      const originalText = setButtonLoading(askBtn, askBtnText, "Thinking...");
+      
+      if (answerBox.classList.contains('empty')) {
+        answerBox.className = 'qa-content';
+      }
+      answerBox.textContent = "🤔 Analyzing your question...";
+
+      try {
+        const response = await fetch("http://localhost:3000/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to get answer');
+        }
+        
+        const data = await response.json();
+        answerBox.textContent = data.answer || "No answer found.";
+        questionInput.value = '';
+      } catch (err) {
+        console.error(err);
+        answerBox.textContent = "Error answering question. Please try again.";
+      } finally {
+        resetButton(askBtn, askBtnText, originalText);
+      }
+    }
+
+    // Initialize animations
+    document.addEventListener('DOMContentLoaded', () => {
+      const cards = document.querySelectorAll('.fade-in');
+      cards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+      });
+    });
+  </script>
+</body>
 </html>
