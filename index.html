@@ -956,10 +956,27 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
         if (user) {
           loginModal.style.display = "none";
           loginBtn.style.display = "none";
-          logoutBtn.style.display = "inline-block";
+          signupBtn.style.display = "none";
+          logoutBtn.style.display = "none";
+
+          const profileIcon = document.createElement("div");
+          profileIcon.id = "profileIcon";
+          profileIcon.innerHTML = '<i class="fas fa-user-circle"></i>';
+          profileIcon.style.fontSize = "1.5rem";
+          profileIcon.style.color = "white";
+          profileIcon.title = user.email;
+          document.querySelector("body").appendChild(profileIcon);
+          profileIcon.style.position = "fixed";
+          profileIcon.style.top = "1rem";
+          profileIcon.style.right = "1rem";
+          profileIcon.style.zIndex = "10000";
         } else {
           loginBtn.style.display = "inline-block";
+          signupBtn.style.display = "inline-block";
           logoutBtn.style.display = "none";
+
+          const existingIcon = document.getElementById("profileIcon");
+          if (existingIcon) existingIcon.remove();
         }
       });
 
