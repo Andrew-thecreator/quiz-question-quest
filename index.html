@@ -918,7 +918,11 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
         firebase.auth().signInWithEmailAndPassword(email, password)
           .catch((error) => {
             if (error.code === 'auth/user-not-found') {
-              firebase.auth().createUserWithEmailAndPassword(email, password);
+              const confirmSignup = confirm("No user found. Would you like to create a new account with this email?");
+              if (confirmSignup) {
+                firebase.auth().createUserWithEmailAndPassword(email, password)
+                  .catch((signupError) => alert("Signup error: " + signupError.message));
+              }
             } else {
               alert("Login error: " + error.message);
             }
