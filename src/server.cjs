@@ -11,6 +11,7 @@ const { OpenAI } = require('openai');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const app = express();
+const upload = multer({ dest: 'uploads/' });
 
 const allowedOrigins = ["https://quizcast.online", "https://quiz-question-quest.vercel.app"];
 
