@@ -888,31 +888,87 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
       });
     });
 
-    // Firebase Auth Listener
-    firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        console.log("Logged in as", user.email);
-      } else {
-        console.log("Not logged in");
-      }
-    });
-
-    // Sample login prompt on load
+    // --- Auth Modal and Button Logic ---
     document.addEventListener("DOMContentLoaded", () => {
-      const email = prompt("Enter your email:");
-      const password = prompt("Enter your password:");
-      firebase.auth().signInWithEmailAndPassword(email, password)
-        .then(() => console.log("Signed in"))
-        .catch((error) => {
-          if (error.code === 'auth/user-not-found') {
-            firebase.auth().createUserWithEmailAndPassword(email, password)
-              .then(() => console.log("User created and signed in"))
-              .catch(err => console.error("Signup error:", err));
-          } else {
-            console.error("Login error:", error);
-          }
-        });
+      // Modal and button DOM elements
+      const loginModal = document.getElementById("loginModal");
+      const loginBtn = document.getElementById("loginBtn");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const loginSubmit = document.getElementById("loginSubmit");
+      const googleLogin = document.getElementById("googleLogin");
+      let currentUser = null;
+
+      // Show modal when login button clicked
+      loginBtn.onclick = () => { loginModal.style.display = "flex"; };
+      // Hide modal if user clicks outside the inner box
+      loginModal.addEventListener("click", (e) => {
+        if (e.target === loginModal) loginModal.style.display = "none";
+      });
+      // Logout
+      logoutBtn.onclick = () => firebase.auth().signOut();
+
+      // Email/password login
+      loginSubmit.onclick = () => {
+        const email = document.getElementById("emailInput").value.trim();
+        const password = document.getElementById("passwordInput").value;
+        if (!email || !password) {
+          alert("Please enter email and password.");
+          return;
+        }
+        firebase.auth().signInWithEmailAndPassword(email, password)
+          .catch((error) => {
+            if (error.code === 'auth/user-not-found') {
+              firebase.auth().createUserWithEmailAndPassword(email, password);
+            } else {
+              alert("Login error: " + error.message);
+            }
+          });
+      };
+      // Google login
+      googleLogin.onclick = () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        firebase.auth().signInWithPopup(provider).catch(err => alert(err.message));
+      };
+
+      // Auth state change: toggle buttons and hide modal
+      firebase.auth().onAuthStateChanged((user) => {
+        currentUser = user;
+        if (user) {
+          loginModal.style.display = "none";
+          loginBtn.style.display = "none";
+          logoutBtn.style.display = "inline-block";
+        } else {
+          loginBtn.style.display = "inline-block";
+          logoutBtn.style.display = "none";
+        }
+      });
+
+      // Show login modal if user tries to upload and is not authenticated
+      pdfInput.addEventListener('click', (e) => {
+        if (!firebase.auth().currentUser) {
+          e.preventDefault();
+          loginModal.style.display = "flex";
+        }
+      });
     });
   </script>
+
+<!-- Login Modal -->
+<div id="loginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); justify-content: center; align-items: center; z-index: 9999;">
+  <div style="background: var(--surface); padding: 2rem; border-radius: 1rem; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+    <h2 style="margin-bottom: 1rem; color: var(--text-primary);">Login</h2>
+    <input id="emailInput" type="email" placeholder="Email" style="width: 100%; margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface-light); color: var(--text-primary);" />
+    <input id="passwordInput" type="password" placeholder="Password" style="width: 100%; margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface-light); color: var(--text-primary);" />
+    <button id="loginSubmit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">Login</button>
+    <button id="googleLogin" class="btn btn-secondary" style="width: 100%;">Sign in with Google</button>
+  </div>
+</div>
+
+<!-- Auth Buttons -->
+<div style="position: fixed; top: 1rem; right: 1rem; z-index: 10000;">
+  <button id="loginBtn" class="btn btn-secondary">Login</button>
+  <button id="logoutBtn" class="btn btn-secondary" style="display:none;">Logout</button>
+</div>
+
 </body>
 </html>
