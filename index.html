@@ -952,33 +952,26 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
 
       // Auth state change: toggle buttons and hide modal
       firebase.auth().onAuthStateChanged((user) => {
-        currentUser = user;
-        if (user) {
-          loginModal.style.display = "none";
-          loginBtn.style.display = "none";
-          signupBtn.style.display = "none";
-          logoutBtn.style.display = "none";
+  currentUser = user;
+  const loginBtn = document.getElementById("loginBtn");
+  const signupBtn = document.getElementById("signupBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const userIcon = document.getElementById("userIcon");
 
-          const profileIcon = document.createElement("div");
-          profileIcon.id = "profileIcon";
-          profileIcon.innerHTML = '<i class="fas fa-user-circle"></i>';
-          profileIcon.style.fontSize = "1.5rem";
-          profileIcon.style.color = "white";
-          profileIcon.title = user.email;
-          document.querySelector("body").appendChild(profileIcon);
-          profileIcon.style.position = "fixed";
-          profileIcon.style.top = "1rem";
-          profileIcon.style.right = "1rem";
-          profileIcon.style.zIndex = "10000";
-        } else {
-          loginBtn.style.display = "inline-block";
-          signupBtn.style.display = "inline-block";
-          logoutBtn.style.display = "none";
-
-          const existingIcon = document.getElementById("profileIcon");
-          if (existingIcon) existingIcon.remove();
-        }
-      });
+  if (user) {
+    loginModal.style.display = "none";
+    loginBtn.style.display = "none";
+    signupBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+    userIcon.style.display = "inline-block";
+    userIcon.title = user.email || "Logged in";
+  } else {
+    loginBtn.style.display = "inline-block";
+    signupBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
+    userIcon.style.display = "none";
+  }
+});
 
       // Show login modal if user tries to upload and is not authenticated
       pdfInput.addEventListener('click', (e) => {
@@ -1003,10 +996,13 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
 </div>
 
 <!-- Auth Buttons -->
-<div style="position: fixed; top: 1rem; right: 1rem; z-index: 10000; display: flex; gap: 0.5rem;">
+<div id="authControls" style="position: fixed; top: 1rem; right: 1rem; z-index: 10000; display: flex; gap: 0.5rem; align-items: center;">
   <button id="loginBtn" class="btn btn-secondary">Login</button>
   <button id="signupBtn" class="btn btn-secondary">Sign Up</button>
-  <button id="logoutBtn" class="btn btn-secondary" style="display:none;">Logout</button>
+  <button id="logoutBtn" class="btn btn-secondary" style="display: none;">Logout</button>
+  <div id="userIcon" style="display: none;" title="Logged in user">
+    <i class="fas fa-user-circle" style="font-size: 1.5rem; color: white;"></i>
+  </div>
 </div>
 
 </body>
