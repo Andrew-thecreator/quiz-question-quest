@@ -487,6 +487,23 @@
       100% { background-position: 1000px 0; }
     }
   </style>
+  <!-- Firebase App (the core Firebase SDK) -->
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+  <!-- Firebase Authentication -->
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyB5dXggw-mwo0AWwez9ShEnksvcJBYsJPs",
+      authDomain: "quizcast-867f8.firebaseapp.com",
+      projectId: "quizcast-867f8",
+      storageBucket: "quizcast-867f8.appspot.com",
+      messagingSenderId: "529347639595",
+      appId: "1:529347639595:web:6125d768515e3fae7cbe",
+      measurementId: "G-KJ51NC2BAH"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
 </head>
 <body>
   <div class="header">
@@ -869,6 +886,32 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
       cards.forEach((card, index) => {
         card.style.animationDelay = `${index * 0.1}s`;
       });
+    });
+
+    // Firebase Auth Listener
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        console.log("Logged in as", user.email);
+      } else {
+        console.log("Not logged in");
+      }
+    });
+
+    // Sample login prompt on load
+    document.addEventListener("DOMContentLoaded", () => {
+      const email = prompt("Enter your email:");
+      const password = prompt("Enter your password:");
+      firebase.auth().signInWithEmailAndPassword(email, password)
+        .then(() => console.log("Signed in"))
+        .catch((error) => {
+          if (error.code === 'auth/user-not-found') {
+            firebase.auth().createUserWithEmailAndPassword(email, password)
+              .then(() => console.log("User created and signed in"))
+              .catch(err => console.error("Signup error:", err));
+          } else {
+            console.error("Login error:", error);
+          }
+        });
     });
   </script>
 </body>
