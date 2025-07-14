@@ -896,6 +896,8 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
       const logoutBtn = document.getElementById("logoutBtn");
       const loginSubmit = document.getElementById("loginSubmit");
       const googleLogin = document.getElementById("googleLogin");
+      const signupSubmit = document.getElementById("signupSubmit");
+      const signupBtn = document.getElementById("signupBtn");
       let currentUser = null;
 
       // Show modal when login button clicked
@@ -906,6 +908,20 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
       });
       // Logout
       logoutBtn.onclick = () => firebase.auth().signOut();
+
+      // Sign Up button shows modal
+      signupBtn.onclick = () => { loginModal.style.display = "flex"; };
+      // Sign Up submit logic
+      signupSubmit.onclick = () => {
+        const email = document.getElementById("emailInput").value.trim();
+        const password = document.getElementById("passwordInput").value;
+        if (!email || !password) {
+          alert("Please enter email and password.");
+          return;
+        }
+        firebase.auth().createUserWithEmailAndPassword(email, password)
+          .catch((signupError) => alert("Signup error: " + signupError.message));
+      };
 
       // Email/password login
       loginSubmit.onclick = () => {
@@ -960,17 +976,19 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
 <!-- Login Modal -->
 <div id="loginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); justify-content: center; align-items: center; z-index: 9999;">
   <div style="background: var(--surface); padding: 2rem; border-radius: 1rem; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-    <h2 style="margin-bottom: 1rem; color: var(--text-primary);">Login</h2>
+    <h2 style="margin-bottom: 1rem; color: var(--text-primary);">Log in or Sign up</h2>
     <input id="emailInput" type="email" placeholder="Email" style="width: 100%; margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface-light); color: var(--text-primary);" />
     <input id="passwordInput" type="password" placeholder="Password" style="width: 100%; margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface-light); color: var(--text-primary);" />
-    <button id="loginSubmit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">Login</button>
+    <button id="loginSubmit" class="btn btn-primary" style="width: 100%; margin-bottom: 0.75rem;">Login</button>
+    <button id="signupSubmit" class="btn btn-secondary" style="width: 100%; margin-bottom: 1rem;">Sign Up</button>
     <button id="googleLogin" class="btn btn-secondary" style="width: 100%;">Sign in with Google</button>
   </div>
 </div>
 
 <!-- Auth Buttons -->
-<div style="position: fixed; top: 1rem; right: 1rem; z-index: 10000;">
+<div style="position: fixed; top: 1rem; right: 1rem; z-index: 10000; display: flex; gap: 0.5rem;">
   <button id="loginBtn" class="btn btn-secondary">Login</button>
+  <button id="signupBtn" class="btn btn-secondary">Sign Up</button>
   <button id="logoutBtn" class="btn btn-secondary" style="display:none;">Logout</button>
 </div>
 
