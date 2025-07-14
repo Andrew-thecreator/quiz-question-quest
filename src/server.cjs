@@ -29,9 +29,14 @@ app.use(cors({
 app.use((req, res, next) => {
   const origin = req.get("origin");
   const referer = req.get("referer");
-  const allowed = "https://quizcast.online";
 
-  if ((origin && origin !== allowed) || (referer && !referer.startsWith(allowed))) {
+  console.log("Origin:", origin);
+  console.log("Referer:", referer);
+
+  if (
+    (origin && !allowedOrigins.includes(origin)) ||
+    (referer && !allowedOrigins.some(url => referer.startsWith(url)))
+  ) {
     return res.status(403).json({ error: "Forbidden: Invalid origin" });
   }
 
