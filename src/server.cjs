@@ -71,29 +71,31 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
     const userId = decodedToken.uid;
     const userRef = db.collection("users").doc(userId);
     const userDoc = await userRef.get();
-
     const now = new Date();
     const today = now.toISOString().split('T')[0]; // YYYY-MM-DD
 
     let credits = 3;
-    if (userDoc.exists) {
+
+    if (!userDoc.exists) {
+      // New user, initialize credits
+      await userRef.set({ credits: 3, lastUsed: today });
+    } else {
       const data = userDoc.data();
       if (data.lastUsed === today) {
-        credits = data.credits;
+        credits = data.credits ?? 3; // default to 3 if undefined
       } else {
-        // Reset for the new day
+        // Reset for a new day
         await userRef.set({ credits: 3, lastUsed: today }, { merge: true });
         credits = 3;
       }
-    } else {
-      await userRef.set({ credits: 3, lastUsed: today });
     }
 
+    // Early return if no credits left
     if (credits <= 0) {
       return res.status(402).json({ error: "You have used all 3 free uploads for today. Please upgrade to continue." });
     }
 
-    // Decrease credit count
+    // Deduct 1 credit
     await userRef.set({ credits: credits - 1, lastUsed: today }, { merge: true });
 
     // PDF parsing logic

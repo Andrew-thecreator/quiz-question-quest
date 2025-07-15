@@ -1003,12 +1003,14 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
           logoutBtn.style.display = "inline-block";
           userIcon.style.display = "inline-block";
           userIcon.title = user.email || "Logged in";
+          document.getElementById("creditDisplay").style.display = "inline-block";
           fetchCredits();
         } else {
           loginBtn.style.display = "inline-block";
           signupBtn.style.display = "inline-block";
           logoutBtn.style.display = "none";
           userIcon.style.display = "none";
+          document.getElementById("creditDisplay").style.display = "none";
         }
       });
 
@@ -1036,8 +1038,7 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
 
 <!-- Auth Buttons -->
 <div id="authControls" style="position: fixed; top: 1rem; right: 1rem; z-index: 10000; display: flex; gap: 0.5rem; align-items: center;">
-  <div id="creditDisplay" style="color: var(--text-secondary); font-weight: 500;">Credits: 0</div>
-  <button id="loginBtn" class="btn btn-secondary">Login</button>
+<div id="creditDisplay" style="color: var(--text-secondary); font-weight: 500; display: none;">Credits: 0</div>  <button id="loginBtn" class="btn btn-secondary">Login</button>
   <button id="signupBtn" class="btn btn-secondary">Sign Up</button>
   <button id="logoutBtn" class="btn btn-secondary" style="display: none;">Logout</button>
   <div id="userIcon" style="display: none;" title="Logged in user">
