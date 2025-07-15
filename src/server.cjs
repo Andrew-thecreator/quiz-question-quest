@@ -1,3 +1,12 @@
+// Firebase Admin SDK imports and initialization
+const admin = require("firebase-admin");
+const { getFirestore } = require("firebase-admin/firestore");
+
+admin.initializeApp({
+  credential: admin.credential.applicationDefault()
+});
+
+const db = getFirestore();
 require('dotenv').config();
 // Store parsed PDF text in memory for use across endpoints
 let storedPdfText = '';
@@ -47,6 +56,47 @@ app.use(express.json());
 
 app.post('/upload', upload.single('pdf'), async (req, res) => {
   try {
+    // Firebase Auth + Credits logic
+    const idToken = req.headers.authorization?.split('Bearer ')[1];
+    if (!idToken) return res.status(401).json({ error: 'Unauthorized: No token' });
+
+    let decodedToken;
+    try {
+      decodedToken = await admin.auth().verifyIdToken(idToken);
+    } catch (error) {
+      console.error('Token verification failed:', error);
+      return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+    }
+
+    const userId = decodedToken.uid;
+    const userRef = db.collection("users").doc(userId);
+    const userDoc = await userRef.get();
+
+    const now = new Date();
+    const today = now.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    let credits = 3;
+    if (userDoc.exists) {
+      const data = userDoc.data();
+      if (data.lastUsed === today) {
+        credits = data.credits;
+      } else {
+        // Reset for the new day
+        await userRef.set({ credits: 3, lastUsed: today }, { merge: true });
+        credits = 3;
+      }
+    } else {
+      await userRef.set({ credits: 3, lastUsed: today });
+    }
+
+    if (credits <= 0) {
+      return res.status(402).json({ error: "You have used all 3 free uploads for today. Please upgrade to continue." });
+    }
+
+    // Decrease credit count
+    await userRef.set({ credits: credits - 1, lastUsed: today }, { merge: true });
+
+    // PDF parsing logic
     const pdfBuffer = fs.readFileSync(req.file.path);
     const data = await pdfParse(pdfBuffer);
     storedPdfText = data.text;

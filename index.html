@@ -632,6 +632,31 @@
     const questionInput = document.getElementById("questionInput");
     const answerBox = document.getElementById("answerBox");
 
+    // --- Credits Tracking ---
+    let userCredits = 0;
+async function fetchCredits() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  try {
+    const token = await user.getIdToken();
+    const res = await fetch("https://quiz-question-quest.onrender.com/credits", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    const data = await res.json();
+    userCredits = data.credits;
+
+    const creditDisplay = document.getElementById("creditDisplay");
+    if (creditDisplay) {
+      creditDisplay.textContent = `Credits: ${userCredits}`;
+    }
+  } catch (err) {
+    console.error("Error fetching credits:", err);
+  }
+}
+
     // Utility Functions
     function formatFileSize(bytes) {
       if (bytes === 0) return '0 Bytes';
@@ -758,9 +783,15 @@
 
     // Form Submission
     form.addEventListener("submit", async (e) => {
+    
       e.preventDefault();
       const file = pdfInput.files[0];
       if (!file) return;
+
+      if (userCredits <= 0) {
+        alert("You've used all 3 free uploads for today. Please upgrade to continue.");
+        return;
+      }
 
       const originalText = setButtonLoading(generateBtn, generateBtnText, "Generating Podcast...");
       showStatus();
@@ -801,6 +832,13 @@
         audioElement.src = audioUrl;
         audioElement.load();
         audioPlayer.classList.add('show');
+
+        // After successful podcast generation, decrement userCredits
+        userCredits -= 1;
+        const creditDisplay = document.getElementById("creditDisplay");
+if (creditDisplay) {
+  creditDisplay.textContent = `Credits: ${userCredits}`;
+}
 
         showStatus("🎙️ Podcast generated successfully! Your audio is ready to play.", "success");
 
@@ -952,26 +990,27 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
 
       // Auth state change: toggle buttons and hide modal
       firebase.auth().onAuthStateChanged((user) => {
-  currentUser = user;
-  const loginBtn = document.getElementById("loginBtn");
-  const signupBtn = document.getElementById("signupBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
-  const userIcon = document.getElementById("userIcon");
+        currentUser = user;
+        const loginBtn = document.getElementById("loginBtn");
+        const signupBtn = document.getElementById("signupBtn");
+        const logoutBtn = document.getElementById("logoutBtn");
+        const userIcon = document.getElementById("userIcon");
 
-  if (user) {
-    loginModal.style.display = "none";
-    loginBtn.style.display = "none";
-    signupBtn.style.display = "none";
-    logoutBtn.style.display = "inline-block";
-    userIcon.style.display = "inline-block";
-    userIcon.title = user.email || "Logged in";
-  } else {
-    loginBtn.style.display = "inline-block";
-    signupBtn.style.display = "inline-block";
-    logoutBtn.style.display = "none";
-    userIcon.style.display = "none";
-  }
-});
+        if (user) {
+          loginModal.style.display = "none";
+          loginBtn.style.display = "none";
+          signupBtn.style.display = "none";
+          logoutBtn.style.display = "inline-block";
+          userIcon.style.display = "inline-block";
+          userIcon.title = user.email || "Logged in";
+          fetchCredits();
+        } else {
+          loginBtn.style.display = "inline-block";
+          signupBtn.style.display = "inline-block";
+          logoutBtn.style.display = "none";
+          userIcon.style.display = "none";
+        }
+      });
 
       // Show login modal if user tries to upload and is not authenticated
       pdfInput.addEventListener('click', (e) => {
@@ -997,6 +1036,7 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
 
 <!-- Auth Buttons -->
 <div id="authControls" style="position: fixed; top: 1rem; right: 1rem; z-index: 10000; display: flex; gap: 0.5rem; align-items: center;">
+  <div id="creditDisplay" style="color: var(--text-secondary); font-weight: 500;">Credits: 0</div>
   <button id="loginBtn" class="btn btn-secondary">Login</button>
   <button id="signupBtn" class="btn btn-secondary">Sign Up</button>
   <button id="logoutBtn" class="btn btn-secondary" style="display: none;">Logout</button>
