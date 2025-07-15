@@ -55,6 +55,7 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 app.post('/upload', upload.single('pdf'), async (req, res) => {
+  console.log("➡️  PDF upload endpoint hit");
   try {
     // Firebase Auth + Credits logic
     const idToken = req.headers.authorization?.split('Bearer ')[1];
@@ -63,6 +64,7 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
     let decodedToken;
     try {
       decodedToken = await admin.auth().verifyIdToken(idToken);
+      console.log("✅ Authenticated user:", decodedToken.uid);
     } catch (error) {
       console.error('Token verification failed:', error);
       return res.status(401).json({ error: 'Unauthorized: Invalid token' });
@@ -71,6 +73,7 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
     const userId = decodedToken.uid;
     const userRef = db.collection("users").doc(userId);
     const userDoc = await userRef.get();
+    console.log("📄 User doc exists:", userDoc.exists);
     const now = new Date();
     const today = now.toISOString().split('T')[0]; // YYYY-MM-DD
 
@@ -79,6 +82,7 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
     if (!userDoc.exists) {
       // New user, initialize credits
       await userRef.set({ credits: 3, lastUsed: today });
+      console.log("📝 Created or updated Firestore document with credits and lastUsed");
     } else {
       const data = userDoc.data();
       if (data.lastUsed === today) {
@@ -86,6 +90,7 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
       } else {
         // Reset for a new day
         await userRef.set({ credits: 3, lastUsed: today }, { merge: true });
+        console.log("📝 Created or updated Firestore document with credits and lastUsed");
         credits = 3;
       }
     }
