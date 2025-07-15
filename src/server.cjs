@@ -1,9 +1,10 @@
 // Firebase Admin SDK imports and initialization
 const admin = require("firebase-admin");
+const serviceAccount = require("../quizcast-86f78-firebase-adminsdk-fbsvc-ff8619790d.json");
 const { getFirestore } = require("firebase-admin/firestore");
 
 admin.initializeApp({
-  credential: admin.credential.applicationDefault()
+  credential: admin.credential.cert(serviceAccount)
 });
 
 const db = getFirestore();
