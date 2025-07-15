@@ -208,6 +208,37 @@ app.post('/ask', async (req, res) => {
   }
 });
 
+app.get('/credits', async (req, res) => {
+  try {
+    const idToken = req.headers.authorization?.split('Bearer ')[1];
+    if (!idToken) return res.status(401).json({ error: 'Unauthorized' });
+
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const userRef = db.collection("users").doc(decoded.uid);
+    const doc = await userRef.get();
+
+    if (!doc.exists) {
+      // Create a new doc with default credits
+      const today = new Date().toISOString().split('T')[0];
+      await userRef.set({ credits: 3, lastUsed: today });
+      return res.json({ credits: 3 });
+    }
+
+    const data = doc.data();
+    const today = new Date().toISOString().split('T')[0];
+
+    if (data.lastUsed !== today) {
+      await userRef.set({ credits: 3, lastUsed: today }, { merge: true });
+      return res.json({ credits: 3 });
+    }
+
+    return res.json({ credits: data.credits ?? 3 });
+  } catch (err) {
+    console.error("Error fetching credits:", err);
+    return res.status(500).json({ error: "Failed to fetch credits" });
+  }
+});
+
 app.listen(3000, '0.0.0.0', () => {
   console.log('Server is running on http://0.0.0.0:3000');
 });
