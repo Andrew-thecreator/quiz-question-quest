@@ -1105,21 +1105,28 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
       document.getElementById("paywallModal").style.display = "flex";
     }
 
-    // Stripe Checkout Integration
-    async function createCheckoutSession() {
+    // Stripe Checkout Integration with plan selection and authentication
+    async function buyPro(plan) {
+      const user = firebase.auth().currentUser;
+      if (!user) {
+        alert("Please log in");
+        return;
+      }
+      const idToken = await user.getIdToken();
       try {
-        const response = await fetch("https://us-central1-quizcast-86f78.cloudfunctions.net/createCheckoutSessionHttp", {
+        const response = await fetch("https://quiz-question-quest.onrender.com/create-checkout-session", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
-          }
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ plan }),
         });
-
         const data = await response.json();
         if (data.url) {
           window.location.href = data.url;
         } else {
-          alert("Checkout failed to start.");
+          alert("Error starting checkout");
         }
       } catch (error) {
         console.error("Error creating checkout session:", error);
@@ -1128,8 +1135,7 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
     }
 
     function subscribe(plan) {
-      // Call Stripe checkout session function
-      createCheckoutSession();
+      buyPro(plan);
     }
   </script>
 

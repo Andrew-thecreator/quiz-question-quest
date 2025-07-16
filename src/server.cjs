@@ -5,6 +5,8 @@ const serviceAccount = JSON.parse(
 );
 const { getFirestore } = require("firebase-admin/firestore");
 
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
@@ -26,6 +28,9 @@ const app = express();
 const upload = multer({ dest: 'uploads/' });
 
 const allowedOrigins = ["https://quizcast.online", "https://quiz-question-quest.vercel.app"];
+
+// Stripe needs raw body for webhook
+app.use('/webhook', express.raw({ type: 'application/json' }));
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -298,6 +303,88 @@ app.post('/upgrade', async (req, res) => {
   } catch (error) {
     console.error("Error upgrading user:", error);
     res.status(500).json({ error: "Failed to upgrade user." });
+  }
+});
+
+app.post('/webhook', async (req, res) => {
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const sig = req.headers['stripe-signature'];
+
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+  } catch (err) {
+    console.error('❌ Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const customerEmail = session.customer_email || session.customer_details.email;
+
+    try {
+      const userSnapshot = await db.collection('users').where('email', '==', customerEmail).get();
+      if (!userSnapshot.empty) {
+        const userDoc = userSnapshot.docs[0];
+        const userRef = db.collection('users').doc(userDoc.id);
+
+        const now = new Date();
+        const validUntil = new Date(now);
+        const plan = session.metadata?.plan || 'monthly';
+        if (plan === 'yearly') {
+          validUntil.setFullYear(validUntil.getFullYear() + 1);
+        } else {
+          validUntil.setMonth(validUntil.getMonth() + 1);
+        }
+
+        await userRef.set({
+          unlimited: true,
+          subscription: plan,
+          valid_until: validUntil.toISOString()
+        }, { merge: true });
+
+        console.log(`✅ Upgraded ${customerEmail} to ${plan}`);
+      } else {
+        console.log("⚠️ No matching user found for email:", customerEmail);
+      }
+    } catch (error) {
+      console.error("🔥 Error upgrading user from webhook:", error);
+    }
+  }
+
+  res.status(200).send('Received');
+});
+
+app.post('/create-checkout-session', async (req, res) => {
+  const { plan } = req.body;
+  const idToken = req.headers.authorization?.split('Bearer ')[1];
+
+  if (!idToken || !['monthly', 'yearly'].includes(plan)) {
+    return res.status(400).json({ error: "Missing token or invalid plan" });
+  }
+
+  try {
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const user = await admin.auth().getUser(decoded.uid);
+    const priceId = plan === 'yearly'
+      ? process.env.STRIPE_YEARLY_PRICE_ID
+      : process.env.STRIPE_MONTHLY_PRICE_ID;
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'subscription',
+      customer_email: user.email,
+      line_items: [{ price: priceId, quantity: 1 }],
+      metadata: { plan },
+      success_url: 'https://quiz-question-quest.vercel.app/?success=true',
+      cancel_url: 'https://quiz-question-quest.vercel.app/?canceled=true',
+    });
+
+    return res.json({ url: session.url });
+  } catch (err) {
+    console.error("🔥 Stripe checkout session error:", err);
+    res.status(500).json({ error: "Failed to start checkout" });
   }
 });
 
