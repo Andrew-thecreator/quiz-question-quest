@@ -1102,7 +1102,7 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
     // Stripe Checkout Integration
     async function createCheckoutSession() {
       try {
-        const response = await fetch("https://quizcast-86f78.web.app/createCheckoutSessionHttp", {
+        const response = await fetch("https://us-central1-quizcast-86f78.cloudfunctions.net/createCheckoutSessionHttp", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
