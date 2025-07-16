@@ -89,6 +89,13 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
     } else {
       const data = userDoc.data();
       if (data.unlimited === true) {
+        const now = new Date();
+        if (data.valid_until && new Date(data.valid_until) < now) {
+          await userRef.set({ unlimited: false }, { merge: true });
+          console.log("❌ Subscription expired, unlimited revoked");
+        }
+      }
+      if (data.unlimited === true) {
         console.log("💎 Unlimited user detected — skipping credit check");
         // PDF parsing logic
         const pdfBuffer = fs.readFileSync(req.file.path);
@@ -236,6 +243,12 @@ app.get('/credits', async (req, res) => {
 
     const data = doc.data();
 
+    const now = new Date();
+    if (data.unlimited === true && data.valid_until && new Date(data.valid_until) < now) {
+      await userRef.set({ unlimited: false }, { merge: true });
+      console.log("❌ Subscription expired, unlimited revoked");
+    }
+
     if (data.unlimited === true) {
       return res.json({ credits: Infinity, unlimited: true });
     }
@@ -262,9 +275,26 @@ app.post('/upgrade', async (req, res) => {
     const decoded = await admin.auth().verifyIdToken(idToken);
     const userRef = db.collection("users").doc(decoded.uid);
 
-    await userRef.set({ unlimited: true }, { merge: true });
+    const { plan } = req.body;
+    if (!plan || !['monthly', 'yearly'].includes(plan)) {
+      return res.status(400).json({ error: "Invalid or missing subscription plan" });
+    }
 
-    res.json({ success: true, message: "User upgraded to unlimited." });
+    const now = new Date();
+    const validUntil = new Date(now);
+    if (plan === 'monthly') {
+      validUntil.setMonth(validUntil.getMonth() + 1);
+    } else if (plan === 'yearly') {
+      validUntil.setFullYear(validUntil.getFullYear() + 1);
+    }
+
+    await userRef.set({
+      unlimited: true,
+      subscription: plan,
+      valid_until: validUntil.toISOString()
+    }, { merge: true });
+
+    res.json({ success: true, message: `User upgraded to ${plan}.` });
   } catch (error) {
     console.error("Error upgrading user:", error);
     res.status(500).json({ error: "Failed to upgrade user." });

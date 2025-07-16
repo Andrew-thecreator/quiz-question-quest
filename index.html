@@ -648,29 +648,31 @@
 
     // --- Credits Tracking ---
     let userCredits = 0;
-async function fetchCredits() {
-  const user = firebase.auth().currentUser;
-  if (!user) return;
+    async function fetchCredits() {
+      const user = firebase.auth().currentUser;
+      if (!user) return;
 
-  const token = await user.getIdToken();
-  const res = await fetch("https://quiz-question-quest.onrender.com/credits", {
-    headers: { Authorization: `Bearer ${token}` }
-  });
+      const token = await user.getIdToken();
+      const res = await fetch("/credits", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
 
-  const data = await res.json();
-  const display = document.getElementById("creditDisplay");
-  const upgradeBtn = document.getElementById("upgradeBtn");
+      const creditDisplay = document.getElementById("creditDisplay");
+      const upgradeBtn = document.getElementById("upgradeBtn");
 
-  if (data.unlimited) {
-    display.innerText = "∞ credits 💎";
-    userCredits = 999999;
-    if (upgradeBtn) upgradeBtn.style.display = "none";
-  } else {
-    display.innerText = `${data.credits} credits`;
-    userCredits = data.credits;
-    if (upgradeBtn) upgradeBtn.style.display = "inline-block";
-  }
-}
+      if (data.unlimited && new Date(data.valid_until) > new Date()) {
+        creditDisplay.innerText = "∞";
+        userCredits = 999999;
+        if (upgradeBtn) upgradeBtn.style.display = "none";
+      } else {
+        creditDisplay.innerText = data.credits;
+        userCredits = data.credits;
+        if (upgradeBtn) upgradeBtn.style.display = "inline-block";
+      }
+    }
 
     // Utility Functions
     function formatFileSize(bytes) {
@@ -1097,9 +1099,31 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
       document.getElementById("paywallModal").style.display = "flex";
     }
 
+    // Stripe Checkout Integration
+    async function createCheckoutSession() {
+      try {
+        const response = await fetch("https://quizcast-86f78.web.app/createCheckoutSessionHttp", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+
+        const data = await response.json();
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          alert("Checkout failed to start.");
+        }
+      } catch (error) {
+        console.error("Error creating checkout session:", error);
+        alert("An error occurred while starting checkout.");
+      }
+    }
+
     function subscribe(plan) {
-      alert(`Redirecting to ${plan} subscription...`);
-      // Redirect to your actual payment/checkout URL here
+      // Call Stripe checkout session function
+      createCheckoutSession();
     }
   </script>
 
