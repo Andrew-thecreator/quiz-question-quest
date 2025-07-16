@@ -649,11 +649,14 @@
     // --- Credits Tracking ---
     let userCredits = 0;
     async function fetchCredits() {
+      console.log("📞 Called fetchCredits()");
       const user = firebase.auth().currentUser;
       if (!user) return;
 
       const token = await user.getIdToken();
-      const res = await fetch("/credits", {
+      console.log("🪪 Firebase ID token:", token);
+      console.log("🔍 Fetching credits from Render backend...");
+      const res = await fetch("https://quiz-question-quest.onrender.com/credits", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -1062,17 +1065,20 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
           // Upgrade button show/hide logic
           const upgradeBtn = document.getElementById("upgradeBtn");
           if (upgradeBtn) upgradeBtn.style.display = "none";
-          fetch("https://quiz-question-quest.onrender.com/credits", {
-            headers: { Authorization: `Bearer ${user.getIdToken()}` }
-          })
-          .then(res => res.json())
-          .then(data => {
-            if (upgradeBtn) {
-              upgradeBtn.style.display = data.unlimited ? "none" : "inline-block";
-            }
-          })
-          .catch(() => {
-            if (upgradeBtn) upgradeBtn.style.display = "inline-block"; // show if check fails
+          user.getIdToken().then(token => {
+            console.log("🔐 Token for upgrade button check:", token);
+            fetch("https://quiz-question-quest.onrender.com/credits", {
+              headers: { Authorization: `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+              if (upgradeBtn) {
+                upgradeBtn.style.display = data.unlimited ? "none" : "inline-block";
+              }
+            })
+            .catch(() => {
+              if (upgradeBtn) upgradeBtn.style.display = "inline-block"; // show if check fails
+            });
           });
         } else {
           loginBtn.style.display = "inline-block";
