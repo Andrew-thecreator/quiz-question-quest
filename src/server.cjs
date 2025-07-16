@@ -139,7 +139,7 @@ app.post('/generate-podcast', async (req, res) => {
     if (!storedPdfText) return res.status(400).json({ error: 'No PDF uploaded yet.' });
 
     const chatCompletion = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
@@ -181,7 +181,7 @@ app.post('/quiz', async (req, res) => {
     if (!storedPdfText) return res.status(400).json({ error: 'No PDF uploaded yet.' });
 
     const quizCompletion = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
@@ -211,7 +211,7 @@ app.post('/ask', async (req, res) => {
     if (!storedPdfText) return res.status(400).json({ error: 'No PDF uploaded yet.' });
 
     const answerCompletion = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-3.5-turbo",
       messages: [
         { role: "system", content: "You are a helpful assistant that answers questions using ONLY the content from the uploaded PDF. If the answer isn't present, respond 'I don't know'." },
         { role: "user", content: `Document:\n${storedPdfText.slice(0, 8000)}\n\nQuestion: ${question}` }

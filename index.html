@@ -667,11 +667,11 @@
       const upgradeBtn = document.getElementById("upgradeBtn");
 
       if (data.unlimited && new Date(data.valid_until) > new Date()) {
-        creditDisplay.innerText = "∞";
+        creditDisplay.innerHTML = "∞ 💎";
         userCredits = 999999;
         if (upgradeBtn) upgradeBtn.style.display = "none";
       } else {
-        creditDisplay.innerText = data.credits;
+        creditDisplay.innerText = `Credits: ${data.credits}`;
         userCredits = data.credits;
         if (upgradeBtn) upgradeBtn.style.display = "inline-block";
       }
