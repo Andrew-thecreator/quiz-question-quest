@@ -229,21 +229,25 @@ app.get('/credits', async (req, res) => {
     const doc = await userRef.get();
 
     if (!doc.exists) {
-      // Create a new doc with default credits
       const today = new Date().toISOString().split('T')[0];
       await userRef.set({ credits: 3, lastUsed: today });
-      return res.json({ credits: 3 });
+      return res.json({ credits: 3, unlimited: false });
     }
 
     const data = doc.data();
+
+    if (data.unlimited === true) {
+      return res.json({ credits: Infinity, unlimited: true });
+    }
+
     const today = new Date().toISOString().split('T')[0];
 
     if (data.lastUsed !== today) {
       await userRef.set({ credits: 3, lastUsed: today }, { merge: true });
-      return res.json({ credits: 3 });
+      return res.json({ credits: 3, unlimited: false });
     }
 
-    return res.json({ credits: data.credits ?? 3 });
+    return res.json({ credits: data.credits ?? 3, unlimited: false });
   } catch (err) {
     console.error("Error fetching credits:", err);
     return res.status(500).json({ error: "Failed to fetch credits" });
