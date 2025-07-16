@@ -545,6 +545,9 @@
           <i class="fas fa-magic"></i>
           <span id="generateBtnText">Generate Podcast</span>
         </button>
+        <button id="upgradeBtn" class="btn btn-secondary" style="margin-top: 1rem; width: 100%;">
+          <i class="fas fa-arrow-up"></i> Upgrade to Unlimited
+        </button>
       </form>
       
       <div class="status" id="status"></div>
@@ -783,14 +786,33 @@ async function fetchCredits() {
 
     // Form Submission
     form.addEventListener("submit", async (e) => {
-    
       e.preventDefault();
       const file = pdfInput.files[0];
       if (!file) return;
 
-      if (userCredits <= 0) {
-        alert("You've used all 3 free uploads for today. Please upgrade to continue.");
-        return;
+      let creditData = {};
+      try {
+        // Get current token for credit check
+        const user = firebase.auth().currentUser;
+        const token = await user.getIdToken();
+        const creditRes = await fetch("https://quiz-question-quest.onrender.com/credits", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        creditData = await creditRes.json();
+        if (creditData.unlimited) {
+          userCredits = 1; // Bypass check
+        }
+        // Only after fetching credit info, check credits
+        if (userCredits <= 0 && !creditData.unlimited) {
+          alert("You've used all 3 free uploads for today. Please upgrade to continue.");
+          return;
+        }
+      } catch (err) {
+        // If credit check fails, fallback to old check
+        if (userCredits <= 0) {
+          alert("You've used all 3 free uploads for today. Please upgrade to continue.");
+          return;
+        }
       }
 
       const originalText = setButtonLoading(generateBtn, generateBtnText, "Generating Podcast...");
@@ -857,6 +879,25 @@ async function fetchCredits() {
         progressBar.classList.remove('show');
       } finally {
         resetButton(generateBtn, generateBtnText, originalText);
+      }
+    });
+    // Upgrade logic
+    document.getElementById("upgradeBtn").addEventListener("click", async () => {
+      const user = firebase.auth().currentUser;
+      if (!user) {
+        alert("Please log in to upgrade.");
+        return;
+      }
+      const token = await user.getIdToken();
+      const res = await fetch("https://quiz-question-quest.onrender.com/upgrade", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        alert("✅ Upgrade successful! You now have unlimited credits.");
+        fetchCredits();
+      } else {
+        alert("⚠️ Upgrade failed. Please try again.");
       }
     });
 
@@ -1011,6 +1052,21 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
           userIcon.title = user.email || "Logged in";
           document.getElementById("creditDisplay").style.display = "inline-block";
           fetchCredits();
+          // Upgrade button show/hide logic
+          const upgradeBtn = document.getElementById("upgradeBtn");
+          if (upgradeBtn) upgradeBtn.style.display = "none";
+          fetch("https://quiz-question-quest.onrender.com/credits", {
+            headers: { Authorization: `Bearer ${user.getIdToken()}` }
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (upgradeBtn) {
+              upgradeBtn.style.display = data.unlimited ? "none" : "inline-block";
+            }
+          })
+          .catch(() => {
+            if (upgradeBtn) upgradeBtn.style.display = "inline-block"; // show if check fails
+          });
         } else {
           loginBtn.style.display = "inline-block";
           signupBtn.style.display = "inline-block";
@@ -1028,6 +1084,8 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
         }
       });
     });
+    // Initially hide the upgrade button
+    document.getElementById("upgradeBtn").style.display = "none";
   </script>
 
 <!-- Login Modal -->
