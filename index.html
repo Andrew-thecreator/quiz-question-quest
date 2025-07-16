@@ -641,22 +641,23 @@ async function fetchCredits() {
   const user = firebase.auth().currentUser;
   if (!user) return;
 
-  try {
-    const token = await user.getIdToken();
-    const res = await fetch("https://quiz-question-quest.onrender.com/credits", {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    const data = await res.json();
-    userCredits = data.credits;
+  const token = await user.getIdToken();
+  const res = await fetch("https://quiz-question-quest.onrender.com/credits", {
+    headers: { Authorization: `Bearer ${token}` }
+  });
 
-    const creditDisplay = document.getElementById("creditDisplay");
-    if (creditDisplay) {
-      creditDisplay.textContent = `Credits: ${userCredits}`;
-    }
-  } catch (err) {
-    console.error("Error fetching credits:", err);
+  const data = await res.json();
+  const display = document.getElementById("creditDisplay");
+  const upgradeBtn = document.getElementById("upgradeBtn");
+
+  if (data.unlimited) {
+    display.innerText = "∞ credits 💎";
+    userCredits = 999999;
+    if (upgradeBtn) upgradeBtn.style.display = "none";
+  } else {
+    display.innerText = `${data.credits} credits`;
+    userCredits = data.credits;
+    if (upgradeBtn) upgradeBtn.style.display = "inline-block";
   }
 }
 
