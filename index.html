@@ -254,6 +254,17 @@
       border-color: var(--primary);
     }
 
+    .btn-success {
+      background: var(--success);
+      color: white;
+      border: 1px solid var(--success);
+    }
+
+    .btn-success:hover:not(:disabled) {
+      background: var(--surface);
+      border-color: var(--success);
+    }
+
     .btn i {
       margin-right: 0.5rem;
     }
@@ -546,7 +557,7 @@
           <span id="generateBtnText">Generate Podcast</span>
         </button>
       </form>
-      <button type="button" id="upgradeBtn" class="btn btn-secondary" style="margin-top: 1rem; width: 100%;"> 
+      <button type="button" id="upgradeBtn" class="btn btn-success" style="margin-top: 1rem; width: 100%;"> 
         <i class="fas fa-arrow-up"></i> Upgrade to Unlimited
       </button>
       
@@ -576,7 +587,7 @@
         <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
           Generate interactive quiz questions based on your PDF content to test comprehension.
         </p>
-        <button class="btn btn-secondary" id="quizBtn" style="width: 100%;">
+        <button class="btn btn-primary" id="quizBtn" style="width: 100%;">
           <i class="fas fa-brain"></i>
           <span id="quizBtnText">Generate Quiz Questions</span>
         </button>
@@ -1105,7 +1116,7 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
 <div id="authControls" style="position: fixed; top: 1rem; right: 1rem; z-index: 10000; display: flex; gap: 0.5rem; align-items: center;">
 <div id="creditDisplay" style="color: var(--text-secondary); font-weight: 500; display: none;">Credits: 0</div>  <button id="loginBtn" class="btn btn-secondary">Login</button>
   <button id="signupBtn" class="btn btn-secondary">Sign Up</button>
-  <button id="logoutBtn" class="btn btn-secondary" style="display: none;">Logout</button>
+  <button id="logoutBtn" class="btn btn-primary" style="display: none;">Logout</button>
   <div id="userIcon" style="display: none;" title="Logged in user">
     <i class="fas fa-user-circle" style="font-size: 1.5rem; color: white;"></i>
   </div>
