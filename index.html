@@ -893,24 +893,17 @@ async function fetchCredits() {
         resetButton(generateBtn, generateBtnText, originalText);
       }
     });
-    // Upgrade logic
-    document.getElementById("upgradeBtn").addEventListener("click", async () => {
+
+    // --- Upgrade Button Logic: show paywall or prompt login ---
+    const upgradeBtn = document.getElementById("upgradeBtn");
+
+    upgradeBtn?.addEventListener("click", () => {
       const user = firebase.auth().currentUser;
       if (!user) {
-        showPaywall();
+        document.getElementById("loginSignupPrompt").style.display = "flex";
         return;
       }
-      const token = await user.getIdToken();
-      const res = await fetch("https://quiz-question-quest.onrender.com/upgrade", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        alert("✅ Upgrade successful! You now have unlimited credits.");
-        fetchCredits();
-      } else {
-        alert("⚠️ Upgrade failed. Please try again.");
-      }
+      showPaywall();
     });
 
     // Quiz Generation
@@ -1156,3 +1149,14 @@ updateContent(quizBox, JSON.stringify(data.quiz), false);      } catch (err) {
     </div>
   </div>
 </html>
+
+<!-- Login/Signup Prompt Modal (for upload when not logged in) -->
+<div id="loginSignupPrompt" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); justify-content: center; align-items: center; z-index: 10000;">
+  <div style="background: var(--surface); padding: 2rem; border-radius: 1rem; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center;">
+    <h2 style="margin-bottom: 1rem; color: var(--text-primary);">Please log in or sign up</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">You need to be logged in to upload a PDF or upgrade your account.</p>
+    <button id="loginPopupBtn" class="btn btn-primary" style="width: 100%; margin-bottom: 0.75rem;">Login</button>
+    <button id="signupPopupBtn" class="btn btn-primary" style="width: 100%;">Sign Up</button>
+    <button class="btn btn-secondary" style="width: 100%; margin-top: 1rem;" onclick="document.getElementById('loginSignupPrompt').style.display = 'none';">Close</button>
+  </div>
+</div>
