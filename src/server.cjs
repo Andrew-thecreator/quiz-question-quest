@@ -88,6 +88,14 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
       console.log("📝 Created or updated Firestore document with credits and lastUsed");
     } else {
       const data = userDoc.data();
+      if (data.unlimited === true) {
+        console.log("💎 Unlimited user detected — skipping credit check");
+        // PDF parsing logic
+        const pdfBuffer = fs.readFileSync(req.file.path);
+        const data = await pdfParse(pdfBuffer);
+        storedPdfText = data.text;
+        return res.json({ message: 'PDF uploaded and parsed successfully.' });
+      }
       if (data.lastUsed === today) {
         credits = data.credits ?? 3; // default to 3 if undefined
       } else {
@@ -239,6 +247,23 @@ app.get('/credits', async (req, res) => {
   } catch (err) {
     console.error("Error fetching credits:", err);
     return res.status(500).json({ error: "Failed to fetch credits" });
+  }
+});
+
+app.post('/upgrade', async (req, res) => {
+  try {
+    const idToken = req.headers.authorization?.split('Bearer ')[1];
+    if (!idToken) return res.status(401).json({ error: 'Unauthorized' });
+
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const userRef = db.collection("users").doc(decoded.uid);
+
+    await userRef.set({ unlimited: true }, { merge: true });
+
+    res.json({ success: true, message: "User upgraded to unlimited." });
+  } catch (error) {
+    console.error("Error upgrading user:", error);
+    res.status(500).json({ error: "Failed to upgrade user." });
   }
 });
 
