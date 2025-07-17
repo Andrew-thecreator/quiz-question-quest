@@ -321,33 +321,31 @@ app.post('/webhook', async (req, res) => {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    const customerEmail = session.customer_email || session.customer_details.email;
+    const uid = session.metadata?.uid;
+    if (!uid) {
+      console.warn("⚠️ No UID in metadata");
+      return res.status(400).send("UID missing in metadata");
+    }
 
     try {
-      const userSnapshot = await db.collection('users').where('email', '==', customerEmail).get();
-      if (!userSnapshot.empty) {
-        const userDoc = userSnapshot.docs[0];
-        const userRef = db.collection('users').doc(userDoc.id);
+      const userRef = db.collection('users').doc(uid);
 
-        const now = new Date();
-        const validUntil = new Date(now);
-        const plan = session.metadata?.plan || 'monthly';
-        if (plan === 'yearly') {
-          validUntil.setFullYear(validUntil.getFullYear() + 1);
-        } else {
-          validUntil.setMonth(validUntil.getMonth() + 1);
-        }
-
-        await userRef.set({
-          unlimited: true,
-          subscription: plan,
-          valid_until: validUntil.toISOString()
-        }, { merge: true });
-
-        console.log(`✅ Upgraded ${customerEmail} to ${plan}`);
+      const now = new Date();
+      const validUntil = new Date(now);
+      const plan = session.metadata?.plan || 'monthly';
+      if (plan === 'yearly') {
+        validUntil.setFullYear(validUntil.getFullYear() + 1);
       } else {
-        console.log("⚠️ No matching user found for email:", customerEmail);
+        validUntil.setMonth(validUntil.getMonth() + 1);
       }
+
+      await userRef.set({
+        unlimited: true,
+        subscription: plan,
+        valid_until: validUntil.toISOString()
+      }, { merge: true });
+
+      console.log(`✅ Upgraded user ${uid} to ${plan}`);
     } catch (error) {
       console.error("🔥 Error upgrading user from webhook:", error);
     }
@@ -376,7 +374,7 @@ app.post('/create-checkout-session', async (req, res) => {
       mode: 'subscription',
       customer_email: user.email,
       line_items: [{ price: priceId, quantity: 1 }],
-      metadata: { plan },
+      metadata: { plan, uid: decoded.uid },
       success_url: 'https://quiz-question-quest.vercel.app/?success=true',
       cancel_url: 'https://quiz-question-quest.vercel.app/?canceled=true',
     });
