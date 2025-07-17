@@ -27,7 +27,12 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 
-const allowedOrigins = ["https://quizcast.online", "https://quiz-question-quest.vercel.app"];
+const allowedOrigins = [
+  "https://quizcast.online",
+  "https://www.quizcast.online",
+  "https://quiz-question-quest.vercel.app",
+  "http://localhost:5173"
+];
 
 // Stripe needs raw body for webhook
 app.use('/webhook', express.raw({ type: 'application/json' }));
@@ -369,14 +374,16 @@ app.post('/create-checkout-session', async (req, res) => {
       ? process.env.STRIPE_YEARLY_PRICE_ID
       : process.env.STRIPE_MONTHLY_PRICE_ID;
 
+    const baseUrl = req.headers.origin || 'https://quizcast.online';
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'subscription',
       customer_email: user.email,
       line_items: [{ price: priceId, quantity: 1 }],
       metadata: { plan, uid: decoded.uid },
-      success_url: 'https://quiz-question-quest.vercel.app/?success=true',
-      cancel_url: 'https://quiz-question-quest.vercel.app/?canceled=true',
+      success_url: `${baseUrl}/`,
+      cancel_url: `${baseUrl}/`,
     });
 
     return res.json({ url: session.url });
