@@ -85,11 +85,11 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
     const now = new Date();
     const today = now.toISOString().split('T')[0]; // YYYY-MM-DD
 
-    let credits = 3;
+    let credits = 2;
 
     if (!userDoc.exists) {
       // New user, initialize credits
-      await userRef.set({ credits: 3, lastUsed: today });
+      await userRef.set({ credits: 2, lastUsed: today });
       console.log("📝 Created or updated Firestore document with credits and lastUsed");
     } else {
       const data = userDoc.data();
@@ -109,12 +109,12 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
         return res.json({ message: 'PDF uploaded and parsed successfully.' });
       }
       if (data.lastUsed === today) {
-        credits = data.credits ?? 3; // default to 3 if undefined
+        credits = data.credits ?? 2; // default to 2 if undefined
       } else {
         // Reset for a new day
-        await userRef.set({ credits: 3, lastUsed: today }, { merge: true });
+        await userRef.set({ credits: 2, lastUsed: today }, { merge: true });
         console.log("📝 Created or updated Firestore document with credits and lastUsed");
-        credits = 3;
+        credits = 2;
       }
     }
 
@@ -242,8 +242,8 @@ app.get('/credits', async (req, res) => {
 
     if (!doc.exists) {
       const today = new Date().toISOString().split('T')[0];
-      await userRef.set({ credits: 3, lastUsed: today });
-      return res.json({ credits: 3, unlimited: false });
+      await userRef.set({ credits: 2, lastUsed: today });
+      return res.json({ credits: 2, unlimited: false });
     }
 
     const data = doc.data();
@@ -261,11 +261,11 @@ app.get('/credits', async (req, res) => {
     const today = new Date().toISOString().split('T')[0];
 
     if (data.lastUsed !== today) {
-      await userRef.set({ credits: 3, lastUsed: today }, { merge: true });
-      return res.json({ credits: 3, unlimited: false });
+      await userRef.set({ credits: 2, lastUsed: today }, { merge: true });
+      return res.json({ credits: 2, unlimited: false });
     }
 
-    return res.json({ credits: data.credits ?? 3, unlimited: false });
+    return res.json({ credits: data.credits ?? 2, unlimited: false });
   } catch (err) {
     console.error("Error fetching credits:", err);
     return res.status(500).json({ error: "Failed to fetch credits" });
