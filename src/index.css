@@ -103,3 +103,13 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+#manageSubscription {
+  @apply fixed bottom-4 right-4 px-4 py-2 rounded-md font-semibold shadow-md z-50;
+  background-color: hsl(var(--sidebar-primary));
+  color: hsl(var(--sidebar-primary-foreground));
+}
+
+#manageSubscription:hover {
+  background-color: hsl(var(--sidebar-ring));
+}

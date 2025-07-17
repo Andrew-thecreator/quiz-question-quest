@@ -1060,6 +1060,12 @@
         const logoutBtn = document.getElementById("logoutBtn");
         const userIcon = document.getElementById("userIcon");
 
+        // Remove any existing manage subscription button
+        const existingManageBtn = document.getElementById("manageSubscriptionBtn");
+        if (existingManageBtn) {
+          existingManageBtn.remove();
+        }
+
         if (user) {
           loginModal.style.display = "none";
           loginBtn.style.display = "none";
@@ -1081,6 +1087,39 @@
             .then(data => {
               if (upgradeBtn) {
                 upgradeBtn.style.display = data.unlimited ? "none" : "inline-block";
+              }
+              // If user is pro (unlimited), show manage subscription button
+              if (data.unlimited) {
+                // Create the button if not already present
+                if (!document.getElementById("manageSubscriptionBtn")) {
+                  const btn = document.createElement("button");
+                  btn.id = "manageSubscriptionBtn";
+                  btn.innerText = "Manage Subscription";
+                  btn.style.position = "fixed";
+                  btn.style.bottom = "20px";
+                  btn.style.right = "20px";
+                  btn.style.padding = "10px 15px";
+                  btn.style.borderRadius = "8px";
+                  btn.style.backgroundColor = "#4f46e5";
+                  btn.style.color = "#fff";
+                  btn.style.border = "none";
+                  btn.style.cursor = "pointer";
+                  btn.style.zIndex = "1000";
+                  btn.onclick = async () => {
+                    const res = await fetch("https://quiz-question-quest.onrender.com/create-portal-session", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({ userId: user.uid }),
+                    });
+                    const data = await res.json();
+                    if (data.url) {
+                      window.location.href = data.url;
+                    }
+                  };
+                  document.body.appendChild(btn);
+                }
               }
             })
             .catch(() => {

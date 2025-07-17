@@ -393,6 +393,36 @@ app.post('/create-checkout-session', async (req, res) => {
   }
 });
 
+app.post('/create-portal-session', async (req, res) => {
+  const idToken = req.headers.authorization?.split('Bearer ')[1];
+  if (!idToken) return res.status(401).json({ error: 'Unauthorized' });
+
+  try {
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const userId = decoded.uid;
+    const user = await admin.auth().getUser(userId);
+
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const customer = customers.data[0];
+
+    if (!customer) {
+      return res.status(404).json({ error: "Customer not found in Stripe" });
+    }
+
+    const returnUrl = req.headers.origin || 'https://quizcast.online';
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: customer.id,
+      return_url: returnUrl,
+    });
+
+    res.json({ url: session.url });
+  } catch (error) {
+    console.error('🔥 Failed to create portal session:', error);
+    res.status(500).json({ error: 'Failed to create portal session' });
+  }
+});
+
 app.listen(3000, '0.0.0.0', () => {
   console.log('Server is running on http://0.0.0.0:3000');
 });
