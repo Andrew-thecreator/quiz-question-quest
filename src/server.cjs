@@ -326,33 +326,22 @@ app.post('/webhook', async (req, res) => {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
+    console.log('🔥 SESSION COMPLETED:', session);
+
     const uid = session.metadata?.uid;
     if (!uid) {
-      console.warn("⚠️ No UID in metadata");
-      return res.status(400).send("UID missing in metadata");
+      console.error('❌ No UID found in session metadata');
+      return res.status(400).send('No UID provided');
     }
 
     try {
-      const userRef = db.collection('users').doc(uid);
-
-      const now = new Date();
-      const validUntil = new Date(now);
-      const plan = session.metadata?.plan || 'monthly';
-      if (plan === 'yearly') {
-        validUntil.setFullYear(validUntil.getFullYear() + 1);
-      } else {
-        validUntil.setMonth(validUntil.getMonth() + 1);
-      }
-
-      await userRef.set({
-        unlimited: true,
-        subscription: plan,
-        valid_until: validUntil.toISOString()
-      }, { merge: true });
-
-      console.log(`✅ Upgraded user ${uid} to ${plan}`);
-    } catch (error) {
-      console.error("🔥 Error upgrading user from webhook:", error);
+      await db.collection('users').doc(uid).update({
+        isPro: true,
+        credits: -1,
+      });
+      console.log('✅ Firestore updated for UID:', uid);
+    } catch (err) {
+      console.error('❌ Firestore update failed:', err);
     }
   }
 
