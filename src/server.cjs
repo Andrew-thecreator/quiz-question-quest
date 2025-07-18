@@ -337,7 +337,7 @@ app.post('/webhook', async (req, res) => {
     try {
       await db.collection('users').doc(uid).update({
         isPro: true,
-        credits: -1,
+        credits: 9999,
       });
       console.log('✅ Firestore updated for UID:', uid);
     } catch (err) {

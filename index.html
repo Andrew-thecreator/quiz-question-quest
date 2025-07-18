@@ -677,8 +677,12 @@
         return;
       }
 
-      // Numeric credits fallback
-      creditDisplay.innerText = `Credits: ${data.credits}`;
+      // Numeric credits fallback, but display ∞ if credits > 50
+      if (data.credits > 50) {
+        creditDisplay.innerText = "Crediti: ∞";
+      } else {
+        creditDisplay.innerText = `Crediti: ${data.credits}`;
+      }
       userCredits = data.credits;
       if (upgradeBtn) upgradeBtn.style.display = "inline-block";
     }
@@ -822,8 +826,8 @@
           headers: { Authorization: `Bearer ${token}` }
         });
         creditData = await creditRes.json();
-        // Only after fetching credit info, check credits or pro status
-        if (!(creditData.isPro || creditData.unlimited || userCredits > 0)) {
+        // Updated premium access check: allow isPro OR credits > 0
+        if (!(creditData.isPro || creditData.credits > 0)) {
           showPaywall();
           return;
         }
