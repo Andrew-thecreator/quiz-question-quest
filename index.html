@@ -670,7 +670,7 @@
       const upgradeBtn = document.getElementById("upgradeBtn");
 
       // Proper unlimited credits logic
-      if (data.unlimited) {
+      if (data.unlimited || data.isPro) {
         creditDisplay.innerText = "∞ 💎";
         userCredits = 999999;
         if (upgradeBtn) upgradeBtn.style.display = "none";
@@ -822,11 +822,8 @@
           headers: { Authorization: `Bearer ${token}` }
         });
         creditData = await creditRes.json();
-        if (creditData.unlimited) {
-          userCredits = 1; // Bypass check
-        }
-        // Only after fetching credit info, check credits
-        if (userCredits <= 0 && !creditData.unlimited) {
+        // Only after fetching credit info, check credits or pro status
+        if (!(creditData.isPro || creditData.unlimited || userCredits > 0)) {
           showPaywall();
           return;
         }
