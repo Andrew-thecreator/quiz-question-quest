@@ -343,6 +343,29 @@ app.post('/webhook', async (req, res) => {
     } catch (err) {
       console.error('❌ Firestore update failed:', err);
     }
+  } else if (event.type === 'invoice.payment_succeeded') {
+    const invoice = event.data.object;
+    const uid = invoice.metadata?.uid;
+
+    if (!uid) {
+      console.error('❌ No UID found in invoice metadata');
+      return res.status(400).send('No UID provided');
+    }
+
+    const subscriptionId = invoice.subscription;
+    try {
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      const periodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+
+      await db.collection('users').doc(uid).set({
+        unlimited: true,
+        valid_until: periodEnd
+      }, { merge: true });
+
+      console.log(`✅ Subscription extended until ${periodEnd} for UID:`, uid);
+    } catch (err) {
+      console.error('❌ Failed to update subscription period:', err);
+    }
   }
 
   res.status(200).send('Received');
