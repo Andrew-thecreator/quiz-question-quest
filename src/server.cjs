@@ -365,8 +365,11 @@ app.post('/webhook', async (req, res) => {
     }
 
     try {
-      // Fetch full subscription object from Stripe
-      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      // Fetch full subscription object from Stripe, expanding items.data
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+        expand: ['items.data']
+      });
+
       let uid = subscription.metadata?.uid;
       if (!uid) {
         console.warn('⚠️ No UID in metadata. Attempting fallback using email:', invoice.customer_email);
@@ -382,13 +385,19 @@ app.post('/webhook', async (req, res) => {
 
         uid = snapshot.docs[0].id;
       }
-      const plan = subscription.metadata?.plan || 'unknown';
-      const periodEnd = new Date(subscription.current_period_end * 1000).toISOString();
 
-      if (!uid) {
-        console.error('❌ No UID found in subscription metadata');
-        return res.status(400).send('No UID provided');
+      const plan = subscription.metadata?.plan || 'unknown';
+      const periodEndUnix =
+        subscription.current_period_end ||
+        subscription.items?.data?.[0]?.current_period_end ||
+        subscription.billing_cycle_anchor;
+
+      if (!periodEndUnix) {
+        console.error('❌ No valid period end timestamp found in subscription');
+        return res.status(400).send('Missing subscription period end');
       }
+
+      const periodEnd = new Date(periodEndUnix * 1000).toISOString();
 
       await db.collection('users').doc(uid).set({
         unlimited: true,
