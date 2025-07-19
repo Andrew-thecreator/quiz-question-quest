@@ -1236,7 +1236,7 @@
   </div>
 </div>
       // Stripe Customer Portal Handler
-      async function handleManageSubscription() {
+      const handleManageSubscription = async () => {
         const user = firebase.auth().currentUser;
         if (!user) return alert('Not logged in');
         const token = await user.getIdToken();
@@ -1261,4 +1261,4 @@
         } else {
           alert('No portal URL returned');
         }
-      }
+      };
