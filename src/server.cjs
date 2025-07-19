@@ -335,36 +335,41 @@ app.post('/webhook', async (req, res) => {
     }
 
     try {
-      await db.collection('users').doc(uid).update({
+      await db.collection('users').doc(uid).set({
         isPro: true,
         credits: 9999,
-      });
+        email: session.customer_email || null
+      }, { merge: true });
       console.log('✅ Firestore updated for UID:', uid);
     } catch (err) {
       console.error('❌ Firestore update failed:', err);
     }
   } else if (event.type === 'invoice.payment_succeeded') {
     const invoice = event.data.object;
-    const uid = invoice.metadata?.uid;
-
-    if (!uid) {
-      console.error('❌ No UID found in invoice metadata');
-      return res.status(400).send('No UID provided');
-    }
-
     const subscriptionId = invoice.subscription;
+
     try {
+      // Fetch full subscription object from Stripe
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      const uid = subscription.metadata?.uid;
+      const plan = subscription.metadata?.plan || 'unknown';
       const periodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+
+      if (!uid) {
+        console.error('❌ No UID found in subscription metadata');
+        return res.status(400).send('No UID provided');
+      }
 
       await db.collection('users').doc(uid).set({
         unlimited: true,
-        valid_until: periodEnd
+        valid_until: periodEnd,
+        subscription: plan,
+        email: invoice.customer_email || null
       }, { merge: true });
 
-      console.log(`✅ Subscription extended until ${periodEnd} for UID:`, uid);
+      console.log(`✅ Updated Firestore for UID ${uid} with plan ${plan} until ${periodEnd}`);
     } catch (err) {
-      console.error('❌ Failed to update subscription period:', err);
+      console.error('❌ Failed to update subscription info:', err);
     }
   }
 
@@ -393,7 +398,9 @@ app.post('/create-checkout-session', async (req, res) => {
       mode: 'subscription',
       customer_email: user.email,
       line_items: [{ price: priceId, quantity: 1 }],
-      metadata: { plan, uid: decoded.uid },
+      subscription_data: {
+        metadata: { plan, uid: decoded.uid }
+      },
       success_url: `${baseUrl}/`,
       cancel_url: `${baseUrl}/`,
     });
