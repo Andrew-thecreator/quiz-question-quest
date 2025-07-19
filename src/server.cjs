@@ -346,7 +346,13 @@ app.post('/webhook', async (req, res) => {
     }
   } else if (event.type === 'invoice.payment_succeeded') {
     const invoice = event.data.object;
+    // Debug log for invoice payload
+    console.log('💰 Full invoice payload:', JSON.stringify(invoice, null, 2));
     const subscriptionId = invoice.subscription;
+    if (!subscriptionId) {
+      console.error('❌ No subscription ID in invoice');
+      return res.status(400).send('No subscription ID');
+    }
 
     try {
       // Fetch full subscription object from Stripe
