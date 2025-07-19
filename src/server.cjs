@@ -412,6 +412,7 @@ app.post('/create-checkout-session', async (req, res) => {
       mode: 'subscription',
       customer_email: user.email,
       line_items: [{ price: priceId, quantity: 1 }],
+      metadata: { uid: decoded.uid }, // ← Added here
       subscription_data: {
         metadata: { uid: decoded.uid, plan }
       },
