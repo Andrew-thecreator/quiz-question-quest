@@ -818,6 +818,7 @@
       if (!file) return;
 
       let creditData = {};
+      let isUnlimited = false;
       try {
         // Get current token for credit check
         const user = firebase.auth().currentUser;
@@ -826,8 +827,10 @@
           headers: { Authorization: `Bearer ${token}` }
         });
         creditData = await creditRes.json();
-        // Updated premium access check: allow isPro OR credits > 0
-        if (!(creditData.isPro || creditData.credits > 0)) {
+        // Ensure isUnlimited reflects backend (from /credits)
+        isUnlimited = !!(creditData.unlimited || creditData.isPro);
+        // New logic: block only if not unlimited and credits === 0
+        if (!isUnlimited && (creditData.credits === 0 || creditData.credits === undefined)) {
           showPaywall();
           return;
         }
