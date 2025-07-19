@@ -205,7 +205,11 @@ app.post('/quiz', async (req, res) => {
     });
 
     const raw = quizCompletion.choices[0].message.content;
-    const quiz = JSON.parse(raw);
+    let cleaned = raw.trim();
+    if (cleaned.startsWith("```")) {
+      cleaned = cleaned.replace(/```(json)?\n?/, "").replace(/```$/, "").trim();
+    }
+    const quiz = JSON.parse(cleaned);
     res.json({ quiz });
   } catch (error) {
     console.error('Error generating quiz:', error);
