@@ -351,7 +351,21 @@ app.post('/webhook', async (req, res) => {
     try {
       // Fetch full subscription object from Stripe
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-      const uid = subscription.metadata?.uid;
+      let uid = subscription.metadata?.uid;
+      if (!uid) {
+        console.warn('⚠️ No UID in metadata. Attempting fallback using email:', invoice.customer_email);
+        const snapshot = await db.collection('users')
+          .where('email', '==', invoice.customer_email)
+          .limit(1)
+          .get();
+
+        if (snapshot.empty) {
+          console.error('❌ No user found with email:', invoice.customer_email);
+          return res.status(400).send('No UID found via email fallback');
+        }
+
+        uid = snapshot.docs[0].id;
+      }
       const plan = subscription.metadata?.plan || 'unknown';
       const periodEnd = new Date(subscription.current_period_end * 1000).toISOString();
 
