@@ -1109,8 +1109,20 @@
                   btn.style.border = "none";
                   btn.style.cursor = "pointer";
                   btn.style.zIndex = "1000";
-                  // Use the new handler for manage subscription
-                  btn.onclick = handleManageSubscription;
+                  btn.onclick = async () => {
+const res = await fetch( "https://quiz-question-quest.onrender.com/create-portal-session",
+{
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+},
+body: JSON. stringify({ userId: user.uid }),
+}) ;
+const data = await res. json();
+if (data.url) {
+window. location.href = data.url;
+}
+};
                   document.body.appendChild(btn);
                 }
               }
@@ -1235,30 +1247,4 @@
     <button class="btn btn-secondary" style="width: 100%; margin-top: 1rem;" onclick="document.getElementById('loginSignupPrompt').style.display = 'none';">Close</button>
   </div>
 </div>
-      // Stripe Customer Portal Handler
-      async function handleManageSubscription() {
-        const user = firebase.auth().currentUser;
-        if (!user) return alert('Not logged in');
-        const token = await user.getIdToken();
-
-        const res = await fetch('https://quiz-question-quest.onrender.com/create-portal-session', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!res.ok) {
-          console.error('Failed to create portal session');
-          alert('Failed to open Stripe portal');
-          return;
-        }
-
-        const data = await res.json();
-        if (data.url) {
-          window.location.href = data.url;
-        } else {
-          alert('No portal URL returned');
-        }
-      }
+     
