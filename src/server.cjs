@@ -348,9 +348,19 @@ app.post('/webhook', async (req, res) => {
     const invoice = event.data.object;
     // Debug log for invoice payload
     console.log('💰 Full invoice payload:', JSON.stringify(invoice, null, 2));
-    const subscriptionId = invoice.subscription;
+    let subscriptionId = invoice.subscription;
+
     if (!subscriptionId) {
-      console.error('❌ No subscription ID in invoice');
+      try {
+        const line = invoice.lines?.data?.[0];
+        subscriptionId = line?.parent?.subscription_item_details?.subscription;
+      } catch (err) {
+        console.error('❌ Failed to extract subscription ID from fallback path');
+      }
+    }
+
+    if (!subscriptionId) {
+      console.error('❌ No subscription ID found in invoice or fallback');
       return res.status(400).send('No subscription ID');
     }
 
