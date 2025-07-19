@@ -413,7 +413,7 @@ app.post('/create-checkout-session', async (req, res) => {
       customer_email: user.email,
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
-        metadata: { plan, uid: decoded.uid }
+        metadata: { uid: decoded.uid, plan }
       },
       success_url: `${baseUrl}/`,
       cancel_url: `${baseUrl}/`,
