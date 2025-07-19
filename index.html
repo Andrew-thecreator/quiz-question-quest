@@ -1110,19 +1110,27 @@
                   btn.style.cursor = "pointer";
                   btn.style.zIndex = "1000";
                   btn.onclick = async () => {
-const res = await fetch( "https://quiz-question-quest.onrender.com/create-portal-session",
-{
-method: "POST",
-headers: {
-"Content-Type": "application/json",
-},
-body: JSON. stringify({ userId: user.uid }),
-}) ;
-const data = await res. json();
-if (data.url) {
-window. location.href = data.url;
-}
-};
+                    try {
+                      const token = await user.getIdToken();
+                      const res = await fetch("https://quiz-question-quest.onrender.com/create-portal-session", {
+                        method: "POST",
+                        headers: {
+                          "Authorization": `Bearer ${token}`,
+                          "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ userId: user.uid })
+                      });
+                      const data = await res.json();
+                      if (data.url) {
+                        window.location.href = data.url;
+                      } else {
+                        alert("No portal URL returned");
+                      }
+                    } catch (err) {
+                      console.error("🔥 Error creating portal session:", err);
+                      alert("Failed to open Stripe portal.");
+                    }
+                  };
                   document.body.appendChild(btn);
                 }
               }
