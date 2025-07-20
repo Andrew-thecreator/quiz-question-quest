@@ -671,8 +671,8 @@
 
       // Proper unlimited credits logic
       if (data.unlimited || data.isPro) {
-        creditDisplay.innerText = "∞ 💎";
-        userCredits = 999999;
+        creditDisplay.innerText = `Crediti: ${data.credits} 💎`;
+        userCredits = data.credits;
         if (upgradeBtn) upgradeBtn.style.display = "none";
         return;
       }
